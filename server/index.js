@@ -101,8 +101,15 @@ app.get('/logout', (req, res) => {
   res.end('session ended')
 })
 
+app.post('/watchlist', (req, res) => {
 
 
+});
+
+app.get('/watchlist', (req, res) => {
+
+
+});
 
 app.listen(port, function() {
   console.log('listening on port  '+port);
