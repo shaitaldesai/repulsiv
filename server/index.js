@@ -1,48 +1,34 @@
-
 // ref - https://developers.google.com/identity/sign-in/web/backend-auth
-
 var express = require('express');
 var bodyParser = require('body-parser');
 var {OAuth2Client} = require('google-auth-library');
 var db = require('../database-mysql');
 var cookieSession = require('cookie-session');
 var utils = require('./utils.js')
-
 try {
   var config = require('../config.js');
 }
-
 catch(e) {
   config = {
     CLIENT_ID: process.env.CLIENT_ID
   }
 }
-
 var CLIENT_ID = config.CLIENT_ID;
 var client = new OAuth2Client(CLIENT_ID);
-
 var port = process.env.PORT || 3000
 var app = express();
-
 app.use(express.static(__dirname + '/../react-client/dist'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-
 app.use(cookieSession({
   name: 'yecchy',
   keys: ['secret-to-sign-cookies'],
   maxAge: 60000
-
 }))
-
-
   // ############ For debugging authentication  ##############
-
   // app.get('/invalid', (req, res) => {
   //   res.send('not valid session')
   // })
-
   // function restrict(req, res, next) {
   //   if (req.session.user) {
   //     next();
@@ -51,23 +37,16 @@ app.use(cookieSession({
   //     res.redirect('/invalid');
   //   }
   // }
-
   // app.get('/protected', restrict, (req, res) => {
   //   res.send('this is protected asset')
   // })
-
   // ############ ########################### ##############
-
   app.get('/products', (req, res) => {
     console.log('inside products')
     res.send('yayy - you are in products page')
   })
-
-
   app.post('/login', (req, res) => {
-
     var token = req.body.id_token;
-
     async function verify() {
       var ticket = await client.verifyIdToken({
           idToken: token,
@@ -75,14 +54,13 @@ app.use(cookieSession({
       });
       var payload = ticket.getPayload();
       var userid = payload['sub'];
-
+      console.log(userid);
       return userInfo = {
         userid: userid,
         email: payload['email'],
         username: payload['email']
       }
     }
-
     verify()
     // after tokenid is verified
     .then( (userInfo) => {
@@ -93,7 +71,6 @@ app.use(cookieSession({
           db.insertUserId(userInfo, (err, result) => {})
         }
       });
-
       // either case (user exist or no), create session (i.e. cookie) IF the user does not exist or expired.
       if (!req.session.user) {
           req.session.user = userInfo.userid;
@@ -106,46 +83,73 @@ app.use(cookieSession({
     })
     .catch(console.error);
   });
-
-
 // Note this logout is terminating the session of this app and NOT the google session. This google sign-in api does not provide this functionality because of obvious reason and how single sign-on works.
 app.get('/logout', (req, res) => {
   req.session = null;
   res.end('session ended')
 })
-
 // ********** testing helper functions in utils.js psedocode
+
+app.get('/search', (req, res) => {
+  // should simply fetch Walmart data using helper function in utils and respond back (no db interaction)
+  console.log('in search get')
+  utils.onRequestFetcher(req.query.productName, (matchedProducts) => {
+    res.json(matchedProducts)
+  })
+})
 
 app.post('/watchlist', (req, res) => {
   // 1- get the data from client {threshold: 22, product: {} }
   // 2- It then should add user infor to this data  (req.session.user) so we know which item is for which user
     // 3- save this data to the database
-   userWatchListData = req.body
+   var userWatchListData = req.body
    userWatchListData.sub = req.session.user
-   console.log(userWatchListData)
+   //console.log(userWatchListData)
+   db.insertProduct(userWatchListData, function(err, result) {
+    if (err) {
+      console.log(err);
+      res.status(500);
+    } else {
+      console.log('success!');
+      res.status(201);
+      res.end();
+    }
+   })
    // now save this data to products table
    res.send('successfully saved in db, if not send error ..')
-
 })
-
-
-app.get('/search', (req, res) => {
-  // should simply fetch Walmart data using helper function in utils and respond back (no db interaction)
-  console.log('in search get')
-  utils.onRequestFetcher(req.body.productName, (matchedProducts) => {
-    res.send(matchedProducts)
-  })
-})
-
 
 app.get('/watchlist', (req, res) => {
+  var token = req.session.user;
+  console.log(token);
+  db.findUserWatchList(token, (err, result) => {
+    if (err) {
+      res.status(500);
+    } else {
+      res.status(200);
+      res.json(result);
+    }
+  });
   // should fetch Walmart data using helper function in utils
   // fetches the data from database produncts tabe (that we we saved in watchlist post request)
   // it should send only the data for the loggedin user
   // In response something like userWatchedProducts = db.findAll({where: sub/user: req.session.user})
     //res.end(userWatchedProducts)
+
 })
 
+app.delete('/watchedItem', (req, res) => {
+  // var item = req.
+  var token = req.session.user;
+  db.removeWatchedItem (item, token, (err, result) => {
+    if (err) {
+      res.status(500);
+    } else {
+      res.status(200);
+      res.end();
+    }
+  });
+});
 
 app.listen(port, function() {
   console.log('listening on port  '+port);

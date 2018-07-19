@@ -14,7 +14,8 @@ class App extends React.Component {
     this.handleFormSubmit = this.handleFormSubmit.bind(this);
     this.handleSearch = this.handleSearch.bind(this);
     this.handleLoginStatus = this.handleLoginStatus.bind(this);
-    this.handleToggleState = this.handleToggleState.bind(this)
+    this.handleToggleState = this.handleToggleState.bind(this);
+    this.fetch = this.fetch.bind(this);
 
     this.state = {
       items: [],
@@ -29,7 +30,7 @@ class App extends React.Component {
     // to ask user for threshhold to set
     // then send this threshold value along with the checked item to server
       // {threshold: 20, product: {itemId: - , name: - , ...} }
-      debugger;
+      // debugger;
       $.ajax({
         url: 'http://localhost:3000/watchList',
         method: 'POST',
@@ -55,14 +56,46 @@ class App extends React.Component {
 
   }
 
-  handleSearch(e) {
-    // perform ajax call to get get the data
+  changeState(data) {
+    this.setState({
+      mockData: JSON.parse(data)
+    });
+  }
 
+  fetch(e, cb) {
+      $.ajax({
+        url: '/search',
+        type: 'GET',
+        contentType: 'application/json',
+        data: {productName: e.target.value},
+        success: (productsList) => {
+          console.log('SUCCESS');
+          cb(productsList);
+          // this.setState({
+          //   mockData: JSON.parse(productsList)
+          // });
+        },
+        error: function (err) {
+          console.log(err);
+        }
+      })
+  }
+
+  handleSearch(e, cb) {
+    var self = this;
+    // perform ajax call to get get the data
     if (e.key ===  'Enter') {
-      this.setState({
-        mockData: sampleData.mockData
+      this.fetch(e, (productList) => {
+        self.setState({
+          mockData: productList
+        });
       })
     }
+    // if (e.key ===  'Enter') {
+    //   this.setState({
+    //     mockData: sampleData.mockData
+    //   })
+    // }
   }
 
   render () {

@@ -36,8 +36,8 @@ module.exports = {
     let uri = 'http://api.walmartlabs.com/';
     let endpoint = 'v1/search';
     let query = '?query='+ productName + '&format=json&apiKey=' + config.WALMART_APIKEY;
-    let url = uri + endpoint + query
-
+    let url = uri + endpoint + query;
+    console.log(url);
     // by default it sorts with 'relevance' and returns only 10 items (numItems=10)
     request.get(url, function(err, response, body) {
       if (err) callback(err, null)
