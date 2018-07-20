@@ -2,10 +2,13 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var {OAuth2Client} = require('google-auth-library');
-var db = require('../database-mysql');
 var cookieSession = require('cookie-session');
 var cron = require('node-cron');
 var utils = require('./utils.js')
+
+var db = require('../database-mysql/connection.js')
+
+
 try {
   var config = require('../config.js');
 }
@@ -42,6 +45,7 @@ app.use(cookieSession({
   //   res.send('this is protected asset')
   // })
   // ############ ########################### ##############
+
   app.get('/products', (req, res) => {
     console.log('inside products')
     res.send('yayy - you are in products page')
@@ -57,7 +61,7 @@ app.use(cookieSession({
       var userid = payload['sub'];
       console.log(userid);
       return userInfo = {
-        userid: userid,
+        uid: String(userid),
         email: payload['email'],
         username: payload['email']
       }
@@ -65,6 +69,7 @@ app.use(cookieSession({
     verify()
     // after tokenid is verified
     .then( (userInfo) => {
+
       console.log('LOGIN/USERINFO', userInfo);
       userInfo = {token: userInfo.userid, userName: userInfo.username, email: userInfo.email};
       // check if userid exists in db
@@ -79,9 +84,13 @@ app.use(cookieSession({
               console.log('Inserted!')
             }
           })
-        }
+        
+
+
       });
       // either case (user exist or no), create session (i.e. cookie) IF the user does not exist or expired.
+
+
       if (!req.session.user) {
           req.session.user = userInfo.token;
           res.end('created new session');
@@ -90,6 +99,7 @@ app.use(cookieSession({
       if (req.session.user) {
         res.end('have a valid session');
       }
+
     })
     .catch(console.error);
   });
@@ -112,6 +122,7 @@ app.post('/watchlist', (req, res) => {
   // 1- get the data from client {threshold: 22, product: {} }
   // 2- It then should add user infor to this data  (req.session.user) so we know which item is for which user
     // 3- save this data to the database
+
    var userWatchListData = req.body;
    userWatchListData.sub = req.session.user;
    // console.log('USERWATCHLISTDATA', userWatchListData);
@@ -142,6 +153,7 @@ app.post('/watchlist', (req, res) => {
       res.end();
     }
    })
+
    // now save this data to products table
    res.send('successfully saved in db, if not send error ..')
 })

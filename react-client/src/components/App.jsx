@@ -1,4 +1,5 @@
 import React from 'react';
+import Header from './Header.jsx'
 import Login from './Login.jsx';
 import Logout from './Logout.jsx';
 import ProductList from './ProductList.jsx';
@@ -6,6 +7,7 @@ import Toggle from 'react-toggle';
 import $ from 'jquery';
 import { Grid, Row, Col} from 'react-bootstrap';
 import {Link} from 'react-router-dom';
+
 var sampleData = require('../mockData.js');
 
 class App extends React.Component {
@@ -21,7 +23,7 @@ class App extends React.Component {
       items: [],
       isLoggedIn: false,
       mockData: [],
-      username: ''
+      username: '',
 
     }
   }
@@ -32,7 +34,7 @@ class App extends React.Component {
       // {threshold: 20, product: {itemId: - , name: - , ...} }
       // debugger;
       $.ajax({
-        url: 'http://localhost:3000/watchList',
+        url: '/watchList',
         method: 'POST',
         data: toggledItem,
         success: (response) => {
@@ -56,47 +58,51 @@ class App extends React.Component {
 
   }
 
-  changeState(data) {
-    this.setState({
-      mockData: JSON.parse(data)
-    });
-  }
+  fetch(productToSearch, cb) {
+    let self = this;
+    var notFoundCase = [{
+      "itemId": 1000001,
+      "parentItemId": 100001,
+      "name": 'Sorry, item not found',
+      "msrp": null,
+      "salePrice": null,
+      "thumbnailImage": 'https://davescomputertips.com/wp-content/uploads/2015/10/item-not-found-feature.jpg',
+      "mediumImage": 'https://davescomputertips.com/wp-content/uploads/2015/10/item-not-found-feature.jpg',
+      "largeImage": 'https://davescomputertips.com/wp-content/uploads/2015/10/item-not-found-feature.jpg'
+    }]
 
-  fetch(e, cb) {
-      $.ajax({
-        url: '/search',
-        type: 'GET',
-        contentType: 'application/json',
-        data: {productName: e.target.value},
-        success: (productsList) => {
-          console.log('SUCCESS');
-          cb(productsList);
-          // this.setState({
-          //   mockData: JSON.parse(productsList)
-          // });
-        },
-        error: function (err) {
-          console.log(err);
+
+    $.ajax({
+      url: '/search',
+      method: 'GET',
+      context: self,
+      data: {productName: productToSearch},
+      success: (products) => {
+        if (products === '') {
+          cb(notFoundCase)
         }
-      })
+        else {
+          cb(products)
+        }
+
+      },
+      error: function (err) {
+        debugger
+        console.log(err);
+      }
+    })
   }
 
-  handleSearch(e, cb) {
-    var self = this;
-    // perform ajax call to get get the data
+
+  handleSearch(e) {
     if (e.key ===  'Enter') {
-      this.fetch(e, (productList) => {
-        self.setState({
-          mockData: productList
-        });
-      })
-    }
-    // if (e.key ===  'Enter') {
-    //   this.setState({
-    //     mockData: sampleData.mockData
-    //   })
-    // }
-  }
+      if (e.target.value) {
+        this.fetch(e.target.value, (products) => {
+        this.setState({
+          mockData: products
+          })
+        })
+      }
 
   render () {
 
@@ -124,37 +130,21 @@ class App extends React.Component {
         {button}
       </div>
 
-
-       <Row>
-          <Col md={10} xs={10}>
-            <br />
-
-            <br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
-          </Col>
-
-          <Col md={2} xs={2}>
-            <br />
-            "Logo would appear here"
-            <br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
-          </Col>
-        </Row>
+        <Header />
 
         <Row>
           <Col md={2} xs={2}>
             <br />
-            "empty space on left"
-
           </Col>
           <Col md={8} xs={8}>
             <br />
-            <input type="text" name="search" placeholder="Seacrh.." onKeyPress={this.handleSearch} />
+            <input type="text" name="search" placeholder="Seacrh.." onKeyPress={this.handleSearch} onChange={this.handleSearch}/>
              <br /><br /><br /><br />
             <ProductList items={this.state.mockData} isLoggedIn={this.state.isLoggedIn} handleToggleState={this.handleToggleState}/>
           </Col>
 
           <Col md={2} xs={2}>
             <br />
-            "empty space on right"
              {watchList}
             <br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
             <br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
@@ -171,19 +161,6 @@ class App extends React.Component {
           </Col>
         </Row>
       </Grid>
-
-  /*
-      <div>
-        <form onSubmit={this.handleFormSubmit}>
-          <h1> Yecchy </h1>
-          {button}
-          <input type="text" name="search" placeholder="Seacrh.." onKeyPress={this.handleSearch} />
-          <ProductList items={this.state.mockData} isLoggedIn={this.state.isLoggedIn} />
-        </form>
-      </div>
-
-   */
-
       )
   }
 }
