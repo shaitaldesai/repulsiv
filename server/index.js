@@ -4,7 +4,7 @@ var bodyParser = require('body-parser');
 var {OAuth2Client} = require('google-auth-library');
 var db = require('../database-mysql');
 var cookieSession = require('cookie-session');
-var CronJob = require('cron').CronJob;
+var cron = require('node-cron');
 var utils = require('./utils.js')
 try {
   var config = require('../config.js');
@@ -120,7 +120,24 @@ app.post('/watchlist', (req, res) => {
       console.log(err);
       res.status(500);
     } else {
-      console.log('success!');
+      console.log('success!', result);
+      // cron.schedule('0 0 */12 * * *', function(){
+      // use Heroku Scheduler addon
+      var task = cron.schedule('0 0 */12 * * *', function(){
+        console.log('running a task every twelve hours');
+        utils.routineFetcher(userWatchListData.productToWatch.itemId, (err, data) => {
+          console.log('LOOKUP_DATA', data);
+          userWatchListData.productToWatch.salePrice = data.salePrice;
+          db.insertProduct(userWatchListData, (err, result) => {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log('cronjob success!');
+            }
+          });
+        });
+      });
+      task.start();
       res.status(201);
       res.end();
     }
