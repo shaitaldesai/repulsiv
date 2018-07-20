@@ -4,6 +4,7 @@ var bodyParser = require('body-parser');
 var {OAuth2Client} = require('google-auth-library');
 var db = require('../database-mysql');
 var cookieSession = require('cookie-session');
+var CronJob = require('cron').CronJob;
 var utils = require('./utils.js')
 try {
   var config = require('../config.js');
@@ -148,13 +149,14 @@ app.get('/watchlist', (req, res) => {
 })
 
 app.delete('/watchedItem', (req, res) => {
-  // var item = req.
+  var item = req.body.itemId;
+  console.log('ITEM TO REMOVE', item);
   var token = req.session.user;
-  db.removeWatchedItem (item, token, (err, result) => {
+  db.removeWatchedItem (55900742, token, (err, result) => {
     if (err) {
       res.status(500);
     } else {
-      res.status(200);
+      res.status(202);
       res.end();
     }
   });

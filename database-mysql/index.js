@@ -286,7 +286,8 @@ var insertProduct = function(product, callback) {
 }
 
 var removeWatchedItem = function (itemId, token, callback) {
-  var queryString = 'delete * from products where products.itemId = ' + itemId;
+ // var queryString = 'delete from products where products.itemId = 55427159 and products.user_id = (select users.id from users where users.token = 101062605425295984365)' ;
+  var queryString = 'delete from products where products.itemId = ' + itemId + 'and products.user_id = (select id from users where users.token = ' + token + ')' ;
   connection.query(queryString, (err, result, fields) => {
     if (err) {
       callback(err, null);
