@@ -67,8 +67,8 @@ USE test;
 
 CREATE TABLE users (
   id int NOT NULL AUTO_INCREMENT,
-  token int NOT NULL UNIQUE,
-  userName varchar(10) NOT NULL,
+  token varchar(25) NOT NULL UNIQUE,
+  userName varchar(25) NOT NULL,
   email varchar(50) NOT NULL,
   PRIMARY KEY (id)
 );
@@ -77,7 +77,7 @@ CREATE TABLE products (
   id int NOT NULL AUTO_INCREMENT,
   itemId int NOT NULL,
   productName varchar(100) NOT NULL,
-  salesPrice int NOT NULL,
+  salesPrice decimal NOT NULL,
   threshHoldPrice int NOT NULL,
   created_at timestamp NOT NULL,
   user_id int NOT NULL,
@@ -96,7 +96,7 @@ CREATE TABLE users_products (
 
 
 /*  Execute this file from the command line by typing:
- *    mysql -u root < server/schema.sql
+ *    mysql -u root < schema.sql
  *  to create the database and the tables.*/
 
 

@@ -17,7 +17,8 @@ class ProductListItem extends React.Component {
   handleKeyPress(event) {
 
     if (event.key === 'Enter') {
-      var price = Number(event.target.value)
+      var price = Number(event.target.value);
+      console.log(price);
       if (price) {
         this.props.handleToggleState({threshold:price, productToWatch:this.props.value })
         this.setState({

@@ -220,23 +220,27 @@ var selectAll = function(callback) {
 
 var findUserId = function(userId, callback) {
 
-  connection.query('SELECT * FROM users WHERE userId = ?', userId, function(err, results, fields) {
+  connection.query('SELECT * FROM users WHERE token = ' + userId, function(err, results, fields) {
     if (err) {
       callback(err, null);
     } else {
-      callback(null, results)
+      console.log('Login', results.length);
+        callback(null, results);
     }
   })
 }
 
-
 var insertUserId = function(userInfo, callback) {
-  // userInfo = {sub: 1221233223, email:'abc@yahoo.com', username:'userABC'}
+  // userInfo = {token: 1221233223, username:'userABC', email:'abc@yahoo.com'}
+  // userInfo = {token: parseInt(userInfo.userid), userName: userInfo.username, email: userInfo.email};
+  // console.log('LOGIN ROUTE', userInfo);
+
   connection.query('INSERT INTO users SET ?', userInfo, function(err, results, fields) {
     if (err) {
       callback(err, null);
     } else {
-      callback(null, results)
+      console.log('signedup successfully!');
+      callback(null, results);
     }
   })
 }
@@ -254,20 +258,21 @@ var findUserWatchList = function (token, callback) {
 
 var insertProduct = function(product, callback) {
   var userToken = product.sub;
+  console.log('USERTOKEN',userToken);
 
-  connection.query('SELECT id FROM users WHERE token = ' + userToken, function(err, result) {
+  connection.query('SELECT id FROM `users` WHERE `token` = ' + userToken, function(err, result, fields) {
     if (err) {
       callback(err, null);
     } else {
-
+    console.log('USER_ID:', result);
     var productInfo  = {
       itemId: product.productToWatch.itemId,
       productName: product.productToWatch.name,
-      salesPrice: product.productToWatch.salesPrice,
-      threshHoldPrice: product.threshhold,
-      user_id: result
+      salesPrice: product.productToWatch.salePrice,
+      threshHoldPrice: product.threshold,
+      user_id: 1
     };
-
+    console.log(result);
     connection.query('INSERT INTO products SET ?', productInfo, function(err, result, fields) {
       if (err) {
         callback(err, null);

@@ -64,16 +64,25 @@ app.use(cookieSession({
     verify()
     // after tokenid is verified
     .then( (userInfo) => {
+      console.log('LOGIN/USERINFO', userInfo);
+      userInfo = {token: userInfo.userid, userName: userInfo.username, email: userInfo.email};
       // check if userid exists in db
-      db.findUserId(userInfo.userid, (err, result) => {
+      db.findUserId(userInfo.token, (err, result) => {
         if (result === null || (Array.isArray(result) && result.length === 0)) {
           // if not then insert the id in db
-          db.insertUserId(userInfo, (err, result) => {})
+          db.insertUserId(userInfo, (err, result) => {
+            console.log('Inside insertUser!');
+            if (err) {
+              console.log(err);
+            } else {
+              console.log('Inserted!')
+            }
+          })
         }
       });
       // either case (user exist or no), create session (i.e. cookie) IF the user does not exist or expired.
       if (!req.session.user) {
-          req.session.user = userInfo.userid;
+          req.session.user = userInfo.token;
           res.end('created new session');
       }
       // if the session is valid (i.e. cookie) then just respond with a message to make the ajax request successful.
@@ -93,7 +102,7 @@ app.get('/logout', (req, res) => {
 app.get('/search', (req, res) => {
   // should simply fetch Walmart data using helper function in utils and respond back (no db interaction)
   console.log('in search get')
-  utils.onRequestFetcher(req.query.productName, (matchedProducts) => {
+  utils.onRequestFetcher(req.query.productName, (err, matchedProducts) => {
     res.json(matchedProducts)
   })
 })
@@ -102,9 +111,9 @@ app.post('/watchlist', (req, res) => {
   // 1- get the data from client {threshold: 22, product: {} }
   // 2- It then should add user infor to this data  (req.session.user) so we know which item is for which user
     // 3- save this data to the database
-   var userWatchListData = req.body
-   userWatchListData.sub = req.session.user
-   //console.log(userWatchListData)
+   var userWatchListData = req.body;
+   userWatchListData.sub = req.session.user;
+   // console.log('USERWATCHLISTDATA', userWatchListData);
    db.insertProduct(userWatchListData, function(err, result) {
     if (err) {
       console.log(err);

@@ -42,7 +42,7 @@ module.exports = {
     request.get(url, function(err, response, body) {
       if (err) callback(err, null)
       if (!err && response.statusCode === 200) {
-        var products = JSON.parse(body)
+        var products = JSON.parse(body);
         // products.items is an array of items
         callback(null, products.items)
       }
